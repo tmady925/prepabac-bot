@@ -48,41 +48,37 @@ app.post("/webhook", async (req, res) => {
     console.log(JSON.stringify(req.body, null, 2));
 
     try {
-        const entry = req.body.entry?.[0];
-        const change = entry?.changes?.[0];
-        const value = change?.value;
-
-        const message = value?.messages?.[0];
+        const message =
+            req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
 
         if (!message) {
-            console.log("⚠️ Aucun message détecté");
+            console.log("⚠️ Aucun message");
             return res.sendStatus(200);
         }
 
         const from = message.from;
         const text = message.text?.body;
 
-        console.log("📩 Message reçu:", text);
+        console.log("📩 MESSAGE:", text);
 
-        if (!text) {
-            console.log("⚠️ Message sans texte");
-            return res.sendStatus(200);
-        }
+        if (!text) return res.sendStatus(200);
 
-        // Réponse automatique
+        console.log("📤 Envoi réponse...");
+
         await sendMessage(
             from,
-            `👋 Salut ! J’ai bien reçu ton message : "${text}"`
+            `👋 Reçu: "${text}"`
         );
 
+        console.log("✅ Réponse envoyée");
+
     } catch (err) {
-        console.error("❌ ERREUR WEBHOOK:");
+        console.error("❌ ERREUR:");
         console.error(err.response?.data || err.message);
     }
 
     res.sendStatus(200);
 });
-
 /* =========================
    SEND MESSAGE FUNCTION
 ========================= */
