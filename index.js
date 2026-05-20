@@ -1,15 +1,18 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 const axios = require("axios");
 require("dotenv").config();
 
 const app = express();
-app.use(bodyParser.json());
 
-// ENV
+app.use(express.json());
+
+/* =========================
+   ENV VARIABLES
+========================= */
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+const PORT = process.env.PORT || 3000;
 
 /* =========================
    WEBHOOK VERIFICATION
@@ -34,11 +37,12 @@ app.get("/webhook", (req, res) => {
    RECEIVE MESSAGES
 ========================= */
 app.post("/webhook", async (req, res) => {
-    console.log("🔥 WEBHOOK RECU:");
+    console.log("🔥 WEBHOOK RECEIVED:");
     console.log(JSON.stringify(req.body, null, 2));
 
     try {
-        const message = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+        const message =
+            req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
 
         if (message) {
             const from = message.from;
@@ -46,15 +50,15 @@ app.post("/webhook", async (req, res) => {
 
             console.log("📩 Message reçu:", text);
 
-            // réponse automatique simple
+            // réponse automatique
             await sendMessage(
                 from,
-                "Salut 👋 ton bot Prepabac fonctionne !"
+                "Salut 👋 ton bot Prepabac fonctionne parfaitement !"
             );
         }
     } catch (err) {
         console.error("❌ ERREUR TRAITEMENT WEBHOOK:");
-        console.error(err.message);
+        console.error(err.response?.data || err.message);
     }
 
     res.sendStatus(200);
@@ -90,6 +94,6 @@ async function sendMessage(to, message) {
 /* =========================
    START SERVER
 ========================= */
-app.listen(process.env.PORT, () => {
-    console.log("🚀 Prepabac bot running on port", process.env.PORT);
+app.listen(PORT, () => {
+    console.log("🚀 Prepabac bot running on port", PORT);
 });
