@@ -29,13 +29,23 @@ app.get("/webhook", (req, res) => {
     const token = req.query["hub.verify_token"];
     const challenge = req.query["hub.challenge"];
 
-    console.log("🔍 Webhook verification request received");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("🔍 WEBHOOK VERIFICATION REQUEST");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("Mode reçu        :", JSON.stringify(mode));
+    console.log("Token reçu Meta  :", JSON.stringify(token));
+    console.log("Token dans .env  :", JSON.stringify(VERIFY_TOKEN));
+    console.log("Challenge        :", JSON.stringify(challenge));
+    console.log("Tokens identiques:", token === VERIFY_TOKEN);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
     if (mode && token === VERIFY_TOKEN) {
         console.log("✅ Webhook verified successfully");
         res.status(200).send(challenge);
     } else {
         console.log("❌ Webhook verification failed");
+        if (!mode) console.log("   → Raison : hub.mode manquant");
+        if (token !== VERIFY_TOKEN) console.log("   → Raison : token mismatch");
         res.sendStatus(403);
     }
 });
@@ -44,7 +54,9 @@ app.get("/webhook", (req, res) => {
    RECEIVE MESSAGES
 ========================= */
 app.post("/webhook", async (req, res) => {
-    console.log("🔥 WEBHOOK RECEIVED:");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("🔥 WEBHOOK POST RECEIVED");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log(JSON.stringify(req.body, null, 2));
 
     try {
@@ -52,33 +64,32 @@ app.post("/webhook", async (req, res) => {
             req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
 
         if (!message) {
-            console.log("⚠️ Aucun message");
+            console.log("⚠️ Aucun message dans le payload");
             return res.sendStatus(200);
         }
 
         const from = message.from;
         const text = message.text?.body;
 
-        console.log("📩 MESSAGE:", text);
+        console.log("📩 De     :", from);
+        console.log("📩 Message:", text);
 
         if (!text) return res.sendStatus(200);
 
         console.log("📤 Envoi réponse...");
 
-        await sendMessage(
-            from,
-            `👋 Reçu: "${text}"`
-        );
+        await sendMessage(from, `👋 Reçu: "${text}"`);
 
-        console.log("✅ Réponse envoyée");
+        console.log("✅ Réponse envoyée avec succès");
 
     } catch (err) {
-        console.error("❌ ERREUR:");
+        console.error("❌ ERREUR HANDLER:");
         console.error(err.response?.data || err.message);
     }
 
     res.sendStatus(200);
 });
+
 /* =========================
    SEND MESSAGE FUNCTION
 ========================= */
@@ -97,6 +108,11 @@ async function sendMessage(to, message) {
             "Content-Type": "application/json"
         };
 
+        console.log("📡 Appel WhatsApp API...");
+        console.log("   → URL            :", url);
+        console.log("   → PHONE_NUMBER_ID:", PHONE_NUMBER_ID);
+        console.log("   → TOKEN présent  :", !!TOKEN);
+
         const response = await axios.post(url, data, { headers });
 
         console.log("✅ Message envoyé:", response.data);
@@ -110,5 +126,11 @@ async function sendMessage(to, message) {
    START SERVER
 ========================= */
 app.listen(PORT, () => {
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("🚀 Prepabac bot running on port", PORT);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("VERIFY_TOKEN défini  :", !!VERIFY_TOKEN);
+    console.log("WHATSAPP_TOKEN défini:", !!TOKEN);
+    console.log("PHONE_NUMBER_ID      :", PHONE_NUMBER_ID);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 });
